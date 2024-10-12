@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+  
+    
+    <entry>
+      <title>docker oracle 镜像安装</title>
+      <link href="/2024/05/20/docker/docker%20oracle%20%E9%95%9C%E5%83%8F%E5%AE%89%E8%A3%85/"/>
+      <url>/2024/05/20/docker/docker%20oracle%20%E9%95%9C%E5%83%8F%E5%AE%89%E8%A3%85/</url>
+      
+        <content type="html"><![CDATA[<h1 id="oracle-docker-镜像安装"><a href="#oracle-docker-镜像安装" class="headerlink" title="oracle docker 镜像安装"></a>oracle docker 镜像安装</h1><blockquote><p>Oracle 12c，全称Oracle Database 12c，是Oracle 11g的升级版，新增了很多新的特性</p></blockquote><hr><blockquote><blockquote><p>Docker下载oracle12c</p></blockquote></blockquote><blockquote><blockquote><p>查找oracle镜像</p></blockquote><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker search oracle</span><br></pre></td></tr></table></figure><blockquote><p>下载Oracle镜像</p></blockquote><blockquote><p>我这里选择 truevoly&#x2F;oracle-12c镜像</p></blockquote></blockquote><blockquote><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull truevoly/oracle-<span class="number">12</span>c</span><br></pre></td></tr></table></figure><blockquote><p>查看已安装镜像,启动Oracle数据库</p></blockquote></blockquote><blockquote><ol><li>启动并暴露8080&amp;1521端口，8080可以登录网页端管理，1521是数据连接端口:</li></ol><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="keyword">run</span><span class="language-bash"> -d -p 8080:8080 -p 1521:1521 truevoly/oracle-12c</span></span><br></pre></td></tr></table></figure><ol><li>启动并暴露8080&amp;1521端口，并且挂载宿主机目录 &#x2F;var&#x2F;oracle&#x2F;data 到oracle服务器*&#x2F;u01&#x2F;app&#x2F;oracle*目录，这样database数据就保存在本地宿主机上</li></ol><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="keyword">run</span><span class="language-bash"> -d -p 8080:8080 -p 1521:1521 </span></span><br><span class="line">-v /var/oracle/data:u01/app/oracle truevoly/oracle-<span class="number">12</span>c</span><br></pre></td></tr></table></figure></blockquote><blockquote><blockquote><p>启动并定制化DBCA总内存大小，DBCA_TOTAL_MEMORY (in Mb):</p></blockquote></blockquote><blockquote><blockquote><p>查看日志</p></blockquote><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker logs -f  进程id</span><br></pre></td></tr></table></figure></blockquote><blockquote><blockquote><p>进入oracle容器<br>进入镜像的bash对数据库进行进一步的操作</p></blockquote></blockquote><blockquote><figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it <span class="number">84</span>d8 /bin/bash</span><br></pre></td></tr></table></figure><blockquote><p>连接Oracle数据库</p></blockquote><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">hostname: localhost #主机名</span><br><span class="line">port: 1521 #端口号</span><br><span class="line">sid: xe </span><br><span class="line">service name: xe #服务名</span><br><span class="line">username: system #用户名</span><br><span class="line">password: oracle #密码</span><br></pre></td></tr></table></figure><hr></blockquote><blockquote><blockquote><p>创建用户并授权</p></blockquote><ol><li>创建表空间</li></ol></blockquote><blockquote><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span>space     TABLESPACE_QCJ   datafile <span class="string">&#x27;TABLESPACE_QCJ.dbf&#x27;</span> </span><br><span class="line">size <span class="number">500</span>M autoextend <span class="keyword">on</span> next <span class="number">5</span>M maxsize unlimited;</span><br></pre></td></tr></table></figure><ol><li>创建用户并授权表空间给创建的用户</li></ol></blockquote><blockquote><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> root IDENTIFIED <span class="keyword">BY</span> root <span class="keyword">DEFAULT</span> TABLESPACE TABLESPACE_QCJ</span><br></pre></td></tr></table></figure><ol><li>授权用户管理员权限</li></ol></blockquote><blockquote><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> root;</span><br><span class="line"><span class="keyword">grant</span> <span class="keyword">connect</span> <span class="keyword">to</span> root <span class="keyword">with</span> admin option;</span><br><span class="line"><span class="keyword">grant</span> dba <span class="keyword">to</span> root <span class="keyword">with</span> admin option;</span><br><span class="line"><span class="keyword">grant</span> resource <span class="keyword">to</span> root <span class="keyword">with</span> admin option;</span><br></pre></td></tr></table></figure></blockquote>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>MAC VM虚拟机无法使用鼠标侧键配置</title>
+      <link href="/2024/04/09/linux/ubuntu/MAC%20VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%97%A0%E6%B3%95%E4%BD%BF%E7%94%A8%E9%BC%A0%E6%A0%87%E4%BE%A7%E9%94%AE%E9%85%8D%E7%BD%AE/"/>
+      <url>/2024/04/09/linux/ubuntu/MAC%20VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%97%A0%E6%B3%95%E4%BD%BF%E7%94%A8%E9%BC%A0%E6%A0%87%E4%BE%A7%E9%94%AE%E9%85%8D%E7%BD%AE/</url>
+      
+        <content type="html"><![CDATA[<p><img src="/../images/image.png" alt="image.png"></p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> vm </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>rsync 跨平台平台工具使用指南</title>
+      <link href="/2024/04/07/linux/rsync/"/>
+      <url>/2024/04/07/linux/rsync/</url>
+      
+        <content type="html"><![CDATA[<p>rsync主要是一个命令行工具，它通过命令行参数来接收用户的指令和配置信息。以下是rsync提供的一些常用接口和参数：</p><ol><li><p><strong>基本语法：</strong></p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rsync [选项] 源目录/文件 目标目录/文件</span><br></pre></td></tr></table></figure></li><li><p><strong>常用选项：</strong></p><ul><li><code>-a, --archive</code>：归档模式，保持文件属性、权限等。</li><li><code>-v, --verbose</code>：显示详细的输出信息。</li><li><code>-z, --compress</code>：压缩传输数据。</li><li><code>-r, --recursive</code>：递归处理目录。</li><li><code>-u, --update</code>：仅传输更新的文件。</li><li><code>-n, --dry-run</code>：模拟执行，不实际传输文件。</li><li><code>-P, --progress</code>：显示传输进度。</li></ul></li><li><p><strong>远程传输：</strong><br>rsync也可以通过SSH等方式进行远程文件同步，需要使用类似<code>user@host:/path</code>的格式指定远程主机和目录。</p></li><li><p><strong>过滤规则：</strong><br>可以使用<code>--exclude</code>、<code>--include</code>等选项指定需要排除或包含的文件或目录，通过正则表达式进行匹配。</p></li><li><p><strong>日志记录：</strong><br>可以使用<code>--log-file</code>选项指定日志文件，记录rsync执行过程中的详细信息。</p></li><li><p><strong>增量传输：</strong><br>rsync可以根据源文件和目标文件的差异部分进行增量传输，通过比较文件内容和修改时间来确定需要传输的部分。</p></li></ol><p>这些只是rsync提供的一部分常用接口和选项，具体可以查看rsync的官方文档或使用<code>rsync --help</code>命令查看更多详细信息。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>frp 服务端搭建</title>
+      <link href="/2024/04/03/linux/FRP%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%9C%8D%E5%8A%A1%E7%AB%AF/"/>
+      <url>/2024/04/03/linux/FRP%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%9C%8D%E5%8A%A1%E7%AB%AF/</url>
+      
+        <content type="html"><![CDATA[<h3 id="FRP-服务端搭建"><a href="#FRP-服务端搭建" class="headerlink" title="FRP 服务端搭建"></a>FRP 服务端搭建</h3><p>github地址： <a href="https://github.com/fatedier/frp">https://github.com/fatedier/frp</a></p><p>releases地址： <a href="https://github.com/fatedier/frp/releases"> https://github.com/fatedier/frp/releases</a></p><p>配置文档说明 ：<a href="https://gofrp.org/docs/"> https://gofrp.org/docs/</a></p><hr><h2 id="frps-服务端配置"><a href="#frps-服务端配置" class="headerlink" title="frps 服务端配置"></a>frps 服务端配置</h2><p>frps.ini</p><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"> <span class="comment"># 客户端链接服务器的端口，在客户端配置时要一样</span></span><br><span class="line"><span class="attr">bind_port</span> = <span class="number">7000</span></span><br><span class="line"> <span class="comment"># 管理控制台端口</span></span><br><span class="line"><span class="attr">dashboard_port</span> = <span class="number">7001</span></span><br><span class="line"><span class="attr">token</span> = 【自定义】</span><br><span class="line"> <span class="comment"># 管理控制台用户吗 </span></span><br><span class="line"><span class="attr">dashboard_user</span> = root</span><br><span class="line"> <span class="comment"># 管理控制台密码</span></span><br><span class="line"><span class="attr">dashboard_pwd</span> = 【自定义】</span><br><span class="line"> <span class="comment"># 日志位置，最好写绝对路径  </span></span><br><span class="line"><span class="attr">log_file</span> = /home/frp/frps.log 【自定义】</span><br><span class="line"> <span class="comment"># 日志级别</span></span><br><span class="line"><span class="attr">log_level</span> = info</span><br><span class="line"> <span class="comment"># 日志记录天数</span></span><br><span class="line"><span class="attr">log_max_days</span> = <span class="number">3</span></span><br><span class="line"> <span class="comment"># 链接迟最大数量</span></span><br><span class="line"><span class="attr">max_pool_count</span> = <span class="number">10</span></span><br></pre></td></tr></table></figure><h4 id="在-lib-systemd-system-中新建-frps-service文件。"><a href="#在-lib-systemd-system-中新建-frps-service文件。" class="headerlink" title="在&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;中新建 frps.service文件。"></a>在&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;中新建 frps.service文件。</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /lib/systemd/system/frps.service</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=fraps service</span><br><span class="line">After=network.target network-online.target syslog.target</span><br><span class="line">Wants=network.target network-online.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=simple</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">启动服务的命令（此处写你的frps的实际安装目录）</span></span><br><span class="line">ExecStart=/usr/bin/frps -c /etc/frp/frps.ini</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure><h3 id="systemctl-管理-frps"><a href="#systemctl-管理-frps" class="headerlink" title="systemctl 管理 frps"></a>systemctl 管理 frps</h3><p>注册服务端systemctl服务</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl enable frps</span><br></pre></td></tr></table></figure><p>启动服务</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl start frps</span><br></pre></td></tr></table></figure><p>重启</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl restart frps</span><br></pre></td></tr></table></figure><p>停止</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl stop frps</span><br></pre></td></tr></table></figure><p>查看应用日志</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl status frps</span><br></pre></td></tr></table></figure><hr><h2 id="客户端配置"><a href="#客户端配置" class="headerlink" title="客户端配置"></a>客户端配置</h2><p>frpc.ini 服务端配置</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[common]</span><br><span class="line">server_addr = 【服务器外网地址】</span><br><span class="line">server_port = 7000</span><br><span class="line">token = 【自定义】</span><br><span class="line">admin_port = 7001</span><br><span class="line">admin_user = root</span><br><span class="line">admin_pwd = Kai19930922**..</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">[gitlab]</span><br><span class="line">type = tcp</span><br><span class="line">local_ip = 127.0.0.1</span><br><span class="line">local_port = 8011</span><br><span class="line">remote_port = 8011</span><br></pre></td></tr></table></figure><h3 id="systemctl-管理-frpc"><a href="#systemctl-管理-frpc" class="headerlink" title="systemctl 管理 frpc"></a>systemctl 管理 frpc</h3><p>frpc 安装 制作systemctl 启动项</p><h4 id="在-lib-systemd-system-中新建-frpc-service文件。"><a href="#在-lib-systemd-system-中新建-frpc-service文件。" class="headerlink" title="在&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;中新建 frpc.service文件。"></a>在&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;中新建 frpc.service文件。</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /lib/systemd/system/frpc.service</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=frapc service</span><br><span class="line">After=network.target network-online.target syslog.target</span><br><span class="line">Wants=network.target network-online.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=simple</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">启动服务的命令（此处写你的frps的实际安装目录）</span></span><br><span class="line">ExecStart=/usr/bin/frpc -c /etc/frp/frpc.ini</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure><hr><p>注册客户端systemctl服务</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl enable frpc</span><br></pre></td></tr></table></figure><p>启动服务</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl start frpc</span><br></pre></td></tr></table></figure><p>重启</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl restart frpc</span><br></pre></td></tr></table></figure><p>停止</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl stop frpc</span><br></pre></td></tr></table></figure><p>查看应用日志</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl status frpc</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>idea 激活</title>
+      <link href="/2024/04/02/IDEA/idea%20%E6%BF%80%E6%B4%BB/"/>
+      <url>/2024/04/02/IDEA/idea%20%E6%BF%80%E6%B4%BB/</url>
+      
+        <content type="html"><![CDATA[<h1 id="idea-激活"><a href="#idea-激活" class="headerlink" title="idea 激活"></a>idea 激活</h1><h2 id="支持最新版本"><a href="#支持最新版本" class="headerlink" title="支持最新版本"></a>支持最新版本</h2><h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><p>1、本激活方法适用于2022、2021、2020、2019、2018全系列版本；；<br>2、使用前请仔细阅读下面的图文教程, 按照教程一步一步来即可；</p><p><a href="https://www.exception.site/essay/how-to-free-use-intellij-idea-2020">https://www.exception.site/essay/how-to-free-use-intellij-idea-2020</a></p><p>文档更新日期：2022.2.6</p><p>方式1：无限重置30天试用期教程:<br><a href="https://www.exception.site/essay/idea-reset-eval">https://www.exception.site/essay/idea-reset-eval</a></p><p>方式2：激活到2099年教程: <a href="https://www.exception.site/essay/how-to-free-use-intellij-idea-2019-3">https://www.exception.site/essay/how-to-free-use-intellij-idea-2019-3</a></p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">6G5NXCPJZB-eyJsaWNlbnNlSWQiOiI2RzVOWENQSlpCIiwibGljZW5zZWVOYW1lIjoic2lnbnVwIHNjb290ZXIiLCJhc3NpZ25lZU5hbWUiOiIiLCJhc3NpZ25lZUVtYWlsIjoiIiwibGljZW5zZVJlc3RyaWN0aW9uIjoiIiwiY2hlY2tDb25jdXJyZW50VXNlIjpmYWxzZSwicHJvZHVjdHMiOlt7ImNvZGUiOiJQU0kiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBEQiIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiSUkiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOmZhbHNlfSx7ImNvZGUiOiJQUEMiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBHTyIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUFNXIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQV1MiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBQUyIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUFJCIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQQ1dNUCIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX1dLCJtZXRhZGF0YSI6IjAxMjAyMjA5MDJQU0FOMDAwMDA1IiwiaGFzaCI6IlRSSUFMOi0xMDc4MzkwNTY4IiwiZ3JhY2VQZXJpb2REYXlzIjo3LCJhdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlLCJpc0F1dG9Qcm9sb25nYXRlZCI6ZmFsc2V9-SnRVlQQR1/9nxZ2AXsQ0seYwU5OjaiUMXrnQIIdNRvykzqQ0Q+vjXlmO7iAUwhwlsyfoMrLuvmLYwoD7fV8Mpz9Gs2gsTR8DfSHuAdvZlFENlIuFoIqyO8BneM9paD0yLxiqxy/WWuOqW6c1v9ubbfdT6z9UnzSUjPKlsjXfq9J2gcDALrv9E0RPTOZqKfnsg7PF0wNQ0/d00dy1k3zI+zJyTRpDxkCaGgijlY/LZ/wqd/kRfcbQuRzdJ/JXa3nj26rACqykKXaBH5thuvkTyySOpZwZMJVJyW7B7ro/hkFCljZug3K+bTw5VwySzJtDcQ9tDYuu0zSAeXrcv2qrOg==-MIIETDCCAjSgAwIBAgIBDTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTIwMTAxOTA5MDU1M1oXDTIyMTAyMTA5MDU1M1owHzEdMBsGA1UEAwwUcHJvZDJ5LWZyb20tMjAyMDEwMTkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCUlaUFc1wf+CfY9wzFWEL2euKQ5nswqb57V8QZG7d7RoR6rwYUIXseTOAFq210oMEe++LCjzKDuqwDfsyhgDNTgZBPAaC4vUU2oy+XR+Fq8nBixWIsH668HeOnRK6RRhsr0rJzRB95aZ3EAPzBuQ2qPaNGm17pAX0Rd6MPRgjp75IWwI9eA6aMEdPQEVN7uyOtM5zSsjoj79Lbu1fjShOnQZuJcsV8tqnayeFkNzv2LTOlofU/Tbx502Ro073gGjoeRzNvrynAP03pL486P3KCAyiNPhDs2z8/COMrxRlZW5mfzo0xsK0dQGNH3UoG/9RVwHG4eS8LFpMTR9oetHZBAgMBAAGjgZkwgZYwCQYDVR0TBAIwADAdBgNVHQ4EFgQUJNoRIpb1hUHAk0foMSNM9MCEAv8wSAYDVR0jBEEwP4AUo562SGdCEjZBvW3gubSgUouX8bOhHKQaMBgxFjAUBgNVBAMMDUpldFByb2ZpbGUgQ0GCCQDSbLGDsoN54TATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwDQYJKoZIhvcNAQELBQADggIBABqRoNGxAQct9dQUFK8xqhiZaYPd30TlmCmSAaGJ0eBpvkVeqA2jGYhAQRqFiAlFC63JKvWvRZO1iRuWCEfUMkdqQ9VQPXziE/BlsOIgrL6RlJfuFcEZ8TK3syIfIGQZNCxYhLLUuet2HE6LJYPQ5c0jH4kDooRpcVZ4rBxNwddpctUO2te9UU5/FjhioZQsPvd92qOTsV+8Cyl2fvNhNKD1Uu9ff5AkVIQn4JU23ozdB/R5oUlebwaTE6WZNBs+TA/qPj+5/we9NH71WRB0hqUoLI2AKKyiPw++FtN4Su1vsdDlrAzDj9ILjpjJKA1ImuVcG329/WTYIKysZ1CWK3zATg9BeCUPAV1pQy8ToXOq+RSYen6winZ2OO93eyHv2Iw5kbn1dqfBw1BuTE29V2FJKicJSu8iEOpfoafwJISXmz1wnnWL3V/0NxTulfWsXugOoLfv0ZIBP1xH9kmf22jjQ2JiHhQZP7ZDsreRrOeIQ/c4yR8IQvMLfC0WKQqrHu5ZzXTH4NO3CwGWSlTY74kE91zXB5mwWAx1jig+UXYc2w4RkVhy0//lOmVya/PEepuuTTI4+UJwC7qbVlh5zfhj8oTNUXgN0AOc+Q0/WFPl1aw5VV/VrO8FCoB15lFVlpKaQ1Yh+DVU8ke+rt9Th0BCHXe0uZOEmH0nOnH/0onD</span><br></pre></td></tr></table></figure><p>方法来源 ：<a href="https://www.exception.site/">https://www.exception.site/</a></p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Ubuntu 查看代理设置的五种方法</title>
+      <link href="/2024/03/30/linux/ubuntu/Ubuntu%20%E6%9F%A5%E7%9C%8B%E4%BB%A3%E7%90%86%E8%AE%BE%E7%BD%AE%E7%9A%84%E4%BA%94%E7%A7%8D%E6%96%B9%E6%B3%95/"/>
+      <url>/2024/03/30/linux/ubuntu/Ubuntu%20%E6%9F%A5%E7%9C%8B%E4%BB%A3%E7%90%86%E8%AE%BE%E7%BD%AE%E7%9A%84%E4%BA%94%E7%A7%8D%E6%96%B9%E6%B3%95/</url>
+      
+        <content type="html"><![CDATA[<h3 id="Ubuntu-查看代理设置的五种方法"><a href="#Ubuntu-查看代理设置的五种方法" class="headerlink" title="Ubuntu 查看代理设置的五种方法"></a>Ubuntu 查看代理设置的五种方法</h3><h3 id="1-命令行查看环境变量-在Ubuntu系统中，您可以通过命令行查看与代理相关的环境变量。打开终端，然后输入以下命令："><a href="#1-命令行查看环境变量-在Ubuntu系统中，您可以通过命令行查看与代理相关的环境变量。打开终端，然后输入以下命令：" class="headerlink" title="1. 命令行查看环境变量 在Ubuntu系统中，您可以通过命令行查看与代理相关的环境变量。打开终端，然后输入以下命令："></a>1. 命令行查看环境变量 在Ubuntu系统中，您可以通过命令行查看与代理相关的环境变量。打开终端，然后输入以下命令：</h3><p> <code>bash echo $http_proxy echo $https_proxy </code></p><p> 这些命令将显示当前会话的环境变量值，其中包含了HTTP和HTTPS代理的设置。如果这些环境变量被设置了，它们通常包含代理服务器的地址和端口号。</p><h3 id="2-使用apt配置-如果您是通过apt进行软件包管理，可以查看apt的配置文件来获取代理设置。打开终端，输入以下命令："><a href="#2-使用apt配置-如果您是通过apt进行软件包管理，可以查看apt的配置文件来获取代理设置。打开终端，输入以下命令：" class="headerlink" title="2. 使用apt配置 如果您是通过apt进行软件包管理，可以查看apt的配置文件来获取代理设置。打开终端，输入以下命令："></a>2. 使用<code>apt</code>配置 如果您是通过<code>apt</code>进行软件包管理，可以查看<code>apt</code>的配置文件来获取代理设置。打开终端，输入以下命令：</h3><p> <code>bash cat /etc/apt/apt.conf </code> </p><p>这个命令会显示<code>apt</code>的配置文件内容，其中可能包含代理服务器的设置。 </p><h3 id="3-图形界面工具-Ubuntu提供了图形界面工具，您可以通过系统设置来查看和修改代理设置。-打开“系统设置”。-点击“网络”。-选择您正在使用的网络连接。-点击“设置”或者“选项”按钮。-在打开的窗口中，找到“代理”选项卡，这里会显示当前的代理设置。"><a href="#3-图形界面工具-Ubuntu提供了图形界面工具，您可以通过系统设置来查看和修改代理设置。-打开“系统设置”。-点击“网络”。-选择您正在使用的网络连接。-点击“设置”或者“选项”按钮。-在打开的窗口中，找到“代理”选项卡，这里会显示当前的代理设置。" class="headerlink" title="3. 图形界面工具 Ubuntu提供了图形界面工具，您可以通过系统设置来查看和修改代理设置。 - 打开“系统设置”。 - 点击“网络”。 - 选择您正在使用的网络连接。 - 点击“设置”或者“选项”按钮。 - 在打开的窗口中，找到“代理”选项卡，这里会显示当前的代理设置。"></a>3. 图形界面工具 Ubuntu提供了图形界面工具，您可以通过系统设置来查看和修改代理设置。 - 打开“系统设置”。 - 点击“网络”。 - 选择您正在使用的网络连接。 - 点击“设置”或者“选项”按钮。 - 在打开的窗口中，找到“代理”选项卡，这里会显示当前的代理设置。</h3><h3 id="4-查看系统代理配置文件-在某些情况下，系统级别的代理设置可能被存储在-etc-environment文件中。打开终端，输入以下命令来查看该文件："><a href="#4-查看系统代理配置文件-在某些情况下，系统级别的代理设置可能被存储在-etc-environment文件中。打开终端，输入以下命令来查看该文件：" class="headerlink" title="4. 查看系统代理配置文件 在某些情况下，系统级别的代理设置可能被存储在/etc/environment文件中。打开终端，输入以下命令来查看该文件："></a>4. 查看系统代理配置文件 在某些情况下，系统级别的代理设置可能被存储在<code>/etc/environment</code>文件中。打开终端，输入以下命令来查看该文件：</h3><p> <code>bash cat /etc/environment </code> </p><p>如果文件中包含了<code>http_proxy</code>和<code>https_proxy</code>的设置，那么这些就是系统级别的代理设置。</p><h3 id="5-使用nmcli工具-nmcli是NetworkManager的命令行界面，可以用来查看和修改网络设置。在终端中输入以下命令："><a href="#5-使用nmcli工具-nmcli是NetworkManager的命令行界面，可以用来查看和修改网络设置。在终端中输入以下命令：" class="headerlink" title="5. 使用nmcli工具 nmcli是NetworkManager的命令行界面，可以用来查看和修改网络设置。在终端中输入以下命令："></a>5. 使用<code>nmcli</code>工具 nmcli是NetworkManager的命令行界面，可以用来查看和修改网络设置。在终端中输入以下命令：</h3><p> <code>bash nmcli dev show </code> </p><p>这个命令会显示所有网络设备的详细信息，包括代理设置。 </p><h3 id="总结-以上就是在Ubuntu系统中查看代理设置的几种方法。您可以根据自己的需要和习惯选择使用命令行或者图形界面工具来进行查看。需要注意的是，某些代理设置可能是临时的，只对当前会话有效，而有些则是永久性的，需要修改配置文件才能进行更改。"><a href="#总结-以上就是在Ubuntu系统中查看代理设置的几种方法。您可以根据自己的需要和习惯选择使用命令行或者图形界面工具来进行查看。需要注意的是，某些代理设置可能是临时的，只对当前会话有效，而有些则是永久性的，需要修改配置文件才能进行更改。" class="headerlink" title="总结 以上就是在Ubuntu系统中查看代理设置的几种方法。您可以根据自己的需要和习惯选择使用命令行或者图形界面工具来进行查看。需要注意的是，某些代理设置可能是临时的，只对当前会话有效，而有些则是永久性的，需要修改配置文件才能进行更改。"></a>总结 以上就是在Ubuntu系统中查看代理设置的几种方法。您可以根据自己的需要和习惯选择使用命令行或者图形界面工具来进行查看。需要注意的是，某些代理设置可能是临时的，只对当前会话有效，而有些则是永久性的，需要修改配置文件才能进行更改。</h3>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>linux 配置系统服务</title>
+      <link href="/2024/03/24/linux/hysteria2/"/>
+      <url>/2024/03/24/linux/hysteria2/</url>
+      
+        <content type="html"><![CDATA[<h1 id="hysteria2"><a href="#hysteria2" class="headerlink" title="hysteria2"></a>hysteria2</h1><p>vim &#x2F;lib&#x2F;systemd&#x2F;system&#x2F;hysteria2.service</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=hysteria2 service</span><br><span class="line">After=network.target network-online.target syslog.target</span><br><span class="line">Wants=network.target network-online.target</span><br><span class="line"> </span><br><span class="line">[Service]</span><br><span class="line">Type=simple</span><br><span class="line"> </span><br><span class="line">#启动服务的命令（此处写你的frps的实际安装目录）</span><br><span class="line">ExecStart=/usr/bin/hysteria-linux-amd64 -c /etc/hysteria/hy-client.json</span><br><span class="line"> </span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>docker 安装portainer.io</title>
+      <link href="/2023/06/15/docker/docker%20%E5%AE%89%E8%A3%85portainer.io/"/>
+      <url>/2023/06/15/docker/docker%20%E5%AE%89%E8%A3%85portainer.io/</url>
+      
+        <content type="html"><![CDATA[<h1 id="docker-安装portainer-io"><a href="#docker-安装portainer-io" class="headerlink" title="docker 安装portainer.io"></a>docker 安装portainer.io</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d  --name portainer -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/opt/portainer_data --restart always --privileged=true portainer/portainer-ce:latest</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>nginx 拆卸</title>
+      <link href="/2023/05/10/nginx/nginx/"/>
+      <url>/2023/05/10/nginx/nginx/</url>
+      
+        <content type="html"><![CDATA[<h1 id="nginx-拆卸"><a href="#nginx-拆卸" class="headerlink" title="nginx 拆卸"></a>nginx 拆卸</h1><p>&#x2F;usr&#x2F;local&#x2F;nginx&#x2F;sbin&#x2F;nginx -s stop<br> 如果不知道nginx安装路径，可以通过执行ps命令找到nginx程序的PID，然后kill其PID</p><p>2、查找根下所有名字包含nginx的文件<br>find &#x2F; -name nginx</p><p>3、执行命令 rm -rf *删除nignx安装的相关文件</p><p>4、其他设置 如果设置了Nginx开机自启动的话，可能还需要下面两步<br>chkconfig nginx off</p><p>rm -rf &#x2F;etc&#x2F;init.d&#x2F;nginx</p><p>&#x2F;etc&#x2F;nginx&#x2F;freessl&#x2F;full_chain.pem<br>&#x2F;etc&#x2F;nginx&#x2F;freessl&#x2F;private.key</p><h1 id="Automatically-generated-for-Debian-scripts-DO-NOT-TOUCH"><a href="#Automatically-generated-for-Debian-scripts-DO-NOT-TOUCH" class="headerlink" title="Automatically generated for Debian scripts. DO NOT TOUCH!"></a>Automatically generated for Debian scripts. DO NOT TOUCH!</h1><p>[client]<br>host     &#x3D; localhost<br>user     &#x3D; debian-sys-maint<br>password &#x3D; WRdKE08tAggvYcrj<br>socket   &#x3D; &#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.sock<br>[mysql_upgrade]<br>host     &#x3D; localhost<br>user     &#x3D; debian-sys-maint<br>password &#x3D; WRdKE08tAggvYcrj<br>socket   &#x3D; &#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.sock</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> MacOs </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>docker 常用命令</title>
+      <link href="/2023/01/18/docker/docker%20%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
+      <url>/2023/01/18/docker/docker%20%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
+      
+        <content type="html"><![CDATA[<h1 id="docker-常用命令"><a href="#docker-常用命令" class="headerlink" title="docker 常用命令"></a>docker 常用命令</h1><h2 id="查看docker常用命令："><a href="#查看docker常用命令：" class="headerlink" title="查看docker常用命令："></a>查看docker常用命令：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker --help</span><br><span class="line"></span><br></pre></td></tr></table></figure></h2><p>查看本地有哪些镜像：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker images  </span><br></pre></td></tr></table></figure><pre><code>              -a   参数a = all  同时显示 当前镜像分层的镜像内容 (扩展 镜像可以包含多层内容)              -q   显示镜像的id </code></pre><p>显示镜像的备注信息： docker images –digests   主要显示参数 DIGEST 备注说明信息</p><p>从远程仓库获取镜像  docker pull  镜像名称</p><h2 id="参数详解"><a href="#参数详解" class="headerlink" title="参数详解"></a>参数详解</h2><blockquote><p>　-v 本地目录:容器目录  或 -v 容器目录</p></blockquote><p>示例：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">　　sudo docker run -it --rm -v $PWD(本地目录):/python(容器目录) python /bin/bash </span><br></pre></td></tr></table></figure><blockquote><p>将本机的当前目录，挂载到镜像中的&#x2F;python目录　　</p></blockquote><hr><p>docker run  -it  镜像id&#x2F;镜像名称     – 创建镜像容器实例   it 为保持容器虚拟会话窗口<br>docker run -it  –name  自定义镜像名称   镜像名&#x2F;镜像id   </p><p> docker ps   — 查看当前正在运行的容器 参数 -a 查看所有创建的容器实例包括停止的  “ -n 参数“返回特定行数</p><p>exit 在容器中执行，可以正常关闭当前运行的容器实例</p><p> Ctrl + p +q   容器内执行，可以退出当前容器，并保持容器正常运行</p><p> docker start  容器实例id   – 可以启动已经关闭的容器实例 </p><p> docker restart   容器实例id –可以重启制定的容器实例</p><p>docker stop   容器实例id  –可以在容器外停止容器的运行 </p><p>docker rm -f $(docker ps -a -q)   – 强制删除正在运行的容器实例 ，括号内为表达式，返回所有的容器实例id</p><p> docker attach  容器id   – 根据提供的容器id返回正在运行的容器当中 </p><p> docker exec -it 容器id &#x2F;bin&#x2F;bash  执行容器中的命令行</p><p>docker exec -t 容器id  ls -l &#x2F;tmp    –在镜像外发起shell命令执行对镜像的操作 </p><p> docker  cp 容器id:&#x2F;tmp&#x2F;yum.log  &#x2F;root   从容器中拷贝指定的文件内容到宿主机中 </p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>docker mysql 数据库</title>
+      <link href="/2023/01/12/docker/docker%20mysql/"/>
+      <url>/2023/01/12/docker/docker%20mysql/</url>
+      
+        <content type="html"><![CDATA[<h1 id="docker-数据库"><a href="#docker-数据库" class="headerlink" title="docker 数据库"></a>docker 数据库</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name mysql5.7  -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 --restart always -d mysql:oracle</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>VPS优化</title>
+      <link href="/2023/01/06/VPS/VPS%20%E7%BD%91%E7%BB%9C%E5%BB%B6%E8%BF%9F%E4%BC%98%E5%8C%96/"/>
+      <url>/2023/01/06/VPS/VPS%20%E7%BD%91%E7%BB%9C%E5%BB%B6%E8%BF%9F%E4%BC%98%E5%8C%96/</url>
+      
+        <content type="html"><![CDATA[<h3 id="BBR-Plus"><a href="#BBR-Plus" class="headerlink" title="BBR Plus"></a><mark>BBR Plus</mark></h3><p>wget –no-check-certificate -O tcpx.sh <a href="https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcpx.sh">https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcpx.sh</a></p><h3 id="net-speeder-增量收发包"><a href="#net-speeder-增量收发包" class="headerlink" title="net_speeder 增量收发包"></a><mark>net_speeder 增量收发包</mark></h3><p>wget -O net_speeder.sh –no-check-certificate <a href="https://soft.mengclaw.com/Bash/net_speeder.sh">https://soft.mengclaw.com/Bash/net_speeder.sh</a></p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> MacOS </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>解决苹果鼠标比较飘的问题</title>
+      <link href="/2023/01/06/mac/%E8%A7%A3%E5%86%B3%E8%8B%B9%E6%9E%9C%E9%BC%A0%E6%A0%87%E6%AF%94%E8%BE%83%E9%A3%98%E7%9A%84%E9%97%AE%E9%A2%98/"/>
+      <url>/2023/01/06/mac/%E8%A7%A3%E5%86%B3%E8%8B%B9%E6%9E%9C%E9%BC%A0%E6%A0%87%E6%AF%94%E8%BE%83%E9%A3%98%E7%9A%84%E9%97%AE%E9%A2%98/</url>
+      
+        <content type="html"><![CDATA[<h1 id="解决苹果鼠标比较飘的问题"><a href="#解决苹果鼠标比较飘的问题" class="headerlink" title="解决苹果鼠标比较飘的问题"></a>解决苹果鼠标比较飘的问题</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">defaults write -g com.apple.mouse.scaling 25</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> MacOs </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>brew 国内下载速度过慢，切换阿里源</title>
+      <link href="/2023/01/06/mac/brew%E5%88%87%E6%8D%A2%E9%98%BF%E9%87%8C%E6%BA%90/"/>
+      <url>/2023/01/06/mac/brew%E5%88%87%E6%8D%A2%E9%98%BF%E9%87%8C%E6%BA%90/</url>
+      
+        <content type="html"><![CDATA[<h1 id="brew-国内下载速度过慢，切换阿里源"><a href="#brew-国内下载速度过慢，切换阿里源" class="headerlink" title="brew 国内下载速度过慢，切换阿里源"></a>brew 国内下载速度过慢，切换阿里源</h1><p><strong>环境信息</strong></p><blockquote><p>MacOs 版本13.0.1 (22A400) <a href="%E6%96%87%E7%AB%A0%E4%BB%85%E5%AE%9E%E9%AA%8C%E4%BA%8E%E6%AD%A4%E7%89%88%E6%9C%AC">^1</a><br>2022-12-8 </p></blockquote><h2 id="查看-brew-git-当前源"><a href="#查看-brew-git-当前源" class="headerlink" title="查看 brew.git 当前源"></a>查看 brew.git 当前源</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd &quot;$(brew --repo)&quot; &amp;&amp; git remote -v</span><br></pre></td></tr></table></figure><blockquote><p>origin    <a href="https://github.com/Homebrew/brew.git">https://github.com/Homebrew/brew.git</a> (fetch)<br> origin    <a href="https://github.com/Homebrew/brew.git">https://github.com/Homebrew/brew.git</a> (push)</p></blockquote><h3 id="查看-homebrew-core-git-当前源"><a href="#查看-homebrew-core-git-当前源" class="headerlink" title="查看 homebrew-core.git 当前源"></a>查看 homebrew-core.git 当前源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd &quot;$(brew --repo homebrew/core)&quot; &amp;&amp; git remote -v</span><br></pre></td></tr></table></figure><p>输出：</p><blockquote><p>origin    <a href="https://github.com/Homebrew/homebrew-core.git">https://github.com/Homebrew/homebrew-core.git</a> (fetch)<br>origin    <a href="https://github.com/Homebrew/homebrew-core.git">https://github.com/Homebrew/homebrew-core.git</a> (push)</p></blockquote><h3 id="修改-brew-git-为阿里源"><a href="#修改-brew-git-为阿里源" class="headerlink" title="修改 brew.git 为阿里源"></a>修改 brew.git 为阿里源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git -C &quot;$(brew --repo)&quot; remote set-url origin https://mirrors.aliyun.com/homebrew/brew.git</span><br></pre></td></tr></table></figure><h3 id="修改-homebrew-core-git-为阿里源"><a href="#修改-homebrew-core-git-为阿里源" class="headerlink" title="修改 homebrew-core.git 为阿里源"></a>修改 homebrew-core.git 为阿里源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git -C &quot;$(brew --repo homebrew/core)&quot; remote set-url origin https://mirrors.aliyun.com/homebrew/homebrew-core.git</span><br></pre></td></tr></table></figure><h3 id="zsh-替换-brew-bintray-镜像"><a href="#zsh-替换-brew-bintray-镜像" class="headerlink" title="zsh 替换 brew bintray 镜像"></a>zsh 替换 brew bintray 镜像</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles&#x27; &gt;&gt; ~/.zshrc</span><br><span class="line">source ~/.zshrc</span><br></pre></td></tr></table></figure><h3 id="bash-替换-brew-bintray-镜像"><a href="#bash-替换-brew-bintray-镜像" class="headerlink" title="bash 替换 brew bintray 镜像"></a>bash 替换 brew bintray 镜像</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles&#x27; &gt;&gt; ~/.bash_profile</span><br><span class="line">source ~/.bash_profile</span><br></pre></td></tr></table></figure><h3 id="刷新源"><a href="#刷新源" class="headerlink" title="刷新源"></a>刷新源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew update</span><br></pre></td></tr></table></figure><h2 id="重置官方版本"><a href="#重置官方版本" class="headerlink" title="重置官方版本"></a>重置官方版本</h2><h3 id="重置-brew-git-为官方源"><a href="#重置-brew-git-为官方源" class="headerlink" title="重置 brew.git 为官方源"></a>重置 brew.git 为官方源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git -C &quot;$(brew --repo)&quot; remote set-url origin https://github.com/Homebrew/brew.git</span><br></pre></td></tr></table></figure><h3 id="重置-homebrew-core-git-为官方源"><a href="#重置-homebrew-core-git-为官方源" class="headerlink" title="重置 homebrew-core.git 为官方源"></a>重置 homebrew-core.git 为官方源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git -C &quot;$(brew --repo homebrew/core)&quot; remote set-url origin https://github.com/Homebrew/homebrew-core.git</span><br></pre></td></tr></table></figure><h3 id="重置-homebrew-cask-git-为官方源"><a href="#重置-homebrew-cask-git-为官方源" class="headerlink" title="重置 homebrew-cask.git 为官方源"></a>重置 homebrew-cask.git 为官方源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git -C &quot;$(brew --repo homebrew/cask)&quot; remote set-url origin https://github.com/Homebrew/homebrew-cask</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi ~/.zshrc</span><br></pre></td></tr></table></figure><blockquote><p>删除或者注释 export HOMEBREW_BOTTLE_DOMAIN&#x3D;xxxxxxxxx</p></blockquote><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi ~/.bash_profile</span><br></pre></td></tr></table></figure><blockquote><p>删除或者注释 export HOMEBREW_BOTTLE_DOMAIN&#x3D;xxxxxxxxx</p></blockquote><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">unset HOMEBREW_BOTTLE_DOMAIN</span><br><span class="line"></span><br></pre></td></tr></table></figure><h3 id="刷新源-1"><a href="#刷新源-1" class="headerlink" title="刷新源"></a>刷新源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">brew update</span></span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> MacOs </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>linux firewall防火墙常用命令</title>
+      <link href="/2023/01/06/linux/%E9%98%B2%E7%81%AB%E5%A2%99%E5%91%BD%E4%BB%A4/"/>
+      <url>/2023/01/06/linux/%E9%98%B2%E7%81%AB%E5%A2%99%E5%91%BD%E4%BB%A4/</url>
+      
+        <content type="html"><![CDATA[<h3 id="开启端口3306"><a href="#开启端口3306" class="headerlink" title="开启端口3306"></a><mark>开启端口3306</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --zone=public --add-port=443/tcp --permanent</span><br><span class="line">firewall-cmd --zone=public --add-port=139/tcp --permanent</span><br></pre></td></tr></table></figure><p>firewall-cmd –zone&#x3D;public –add-port&#x3D;23456&#x2F;tcp –permanent</p><h3 id="关闭端口命令"><a href="#关闭端口命令" class="headerlink" title="关闭端口命令"></a><mark>关闭端口命令</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --zone=public --remove-port=8080/tcp --permanent</span><br></pre></td></tr></table></figure><p><a href="https://www.xiao66ya.cn/">https://www.xiao66ya.cn/</a><br><a href="http://www.carey.js.cn/">www.carey.js.cn</a></p><h3 id="重启防火墙"><a href="#重启防火墙" class="headerlink" title="重启防火墙"></a><mark>重启防火墙</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --reload</span><br></pre></td></tr></table></figure><h3 id="查看已经开放的端口"><a href="#查看已经开放的端口" class="headerlink" title="查看已经开放的端口"></a><mark>查看已经开放的端口</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --list-ports</span><br></pre></td></tr></table></figure><h3 id="查看防火状态"><a href="#查看防火状态" class="headerlink" title="查看防火状态"></a><mark>查看防火状态</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl status firewalld</span><br><span class="line"></span><br><span class="line">service  iptables  status</span><br></pre></td></tr></table></figure><h3 id="暂时关闭防火墙"><a href="#暂时关闭防火墙" class="headerlink" title="暂时关闭防火墙"></a><mark>暂时关闭防火墙</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl stop firewalld</span><br><span class="line"></span><br><span class="line">service iptables stop</span><br></pre></td></tr></table></figure><h3 id="永久关闭防火墙"><a href="#永久关闭防火墙" class="headerlink" title="永久关闭防火墙"></a><mark>永久关闭防火墙</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl disable firewalld</span><br><span class="line"></span><br><span class="line">chkconfig iptables off</span><br></pre></td></tr></table></figure><h3 id="重启防火墙-1"><a href="#重启防火墙-1" class="headerlink" title="重启防火墙"></a><mark>重启防火墙</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl enable firewalld</span><br><span class="line"></span><br><span class="line">service iptables restart</span><br></pre></td></tr></table></figure><h3 id="永久关闭后重启"><a href="#永久关闭后重启" class="headerlink" title="永久关闭后重启"></a><mark>永久关闭后重启</mark></h3><p>&#x2F;&#x2F;暂时还没有试过</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig iptables on</span><br></pre></td></tr></table></figure><h3 id="启动防火墙"><a href="#启动防火墙" class="headerlink" title="启动防火墙"></a><mark>启动防火墙</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start firewalld</span><br></pre></td></tr></table></figure><h3 id="设置开机启动"><a href="#设置开机启动" class="headerlink" title="设置开机启动"></a><mark>设置开机启动</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl enable firewalld</span><br></pre></td></tr></table></figure><h3 id="停止并禁用开机启动"><a href="#停止并禁用开机启动" class="headerlink" title="停止并禁用开机启动"></a><mark>停止并禁用开机启动</mark></h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sytemctl disable firewalld</span><br></pre></td></tr></table></figure><h3 id="查看版本"><a href="#查看版本" class="headerlink" title="查看版本"></a><mark>查看版本</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --version</span><br></pre></td></tr></table></figure><h3 id="查看帮助"><a href="#查看帮助" class="headerlink" title="查看帮助"></a><mark>查看帮助</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --help</span><br></pre></td></tr></table></figure><h3 id="查看区域信息"><a href="#查看区域信息" class="headerlink" title="查看区域信息"></a><mark>查看区域信息</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --get-active-zones</span><br></pre></td></tr></table></figure><h3 id="查看指定接口所属区域信息"><a href="#查看指定接口所属区域信息" class="headerlink" title="查看指定接口所属区域信息"></a><mark>查看指定接口所属区域信息</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --get-zone-of-interface=eth0</span><br></pre></td></tr></table></figure><h3 id="拒绝所有包"><a href="#拒绝所有包" class="headerlink" title=" 拒绝所有包"></a><mark> 拒绝所有包</mark></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --panic-on</span><br></pre></td></tr></table></figure><h3 id="取消拒绝状态"><a href="#取消拒绝状态" class="headerlink" title="取消拒绝状态"></a><MARK>取消拒绝状态</MARK></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --panic-off</span><br></pre></td></tr></table></figure><h3 id="查看是否拒绝"><a href="#查看是否拒绝" class="headerlink" title="查看是否拒绝"></a><MARK>查看是否拒绝</MARK></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --query-panic</span><br></pre></td></tr></table></figure><h3 id="将接口添加到区域-默认接口都在public"><a href="#将接口添加到区域-默认接口都在public" class="headerlink" title="将接口添加到区域(默认接口都在public)"></a><MARK>将接口添加到区域(默认接口都在public)</MARK></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --zone=public --add-interface=eth0(永久生效再加上</span><br><span class="line"> --permanent 然后reload防火墙)</span><br></pre></td></tr></table></figure><h3 id="设置默认接口区域"><a href="#设置默认接口区域" class="headerlink" title="设置默认接口区域"></a><MARK>设置默认接口区域</MARK></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">firewall-cmd --set-default-zone=public(立即生效，无需重启)</span><br></pre></td></tr></table></figure><h3 id=""><a href="#" class="headerlink" title=""></a></h3><h3 id="查看监听的端口"><a href="#查看监听的端口" class="headerlink" title="查看监听的端口"></a><MARK>查看监听的端口</MARK></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -lnpt</span><br></pre></td></tr></table></figure><p>PS:centos7默认没有 netstat 命令，需要安装 net-tools 工具，yum install -y net-tools###检查端口被哪个进程占用</p><p>netstat -lnpt |grep 5672</p><p>docker run -d –name subweb –restart always <br>  -p 18080:80 <br>  -e SITE_NAME&#x3D;subweb <br>  -e API_URL&#x3D;<a href="http://202.5.28.42:25500/">http://202.5.28.42:25500</a> <br>  -e SHORT_URL&#x3D;<a href="https://s.ops.ci/">https://s.ops.ci</a> <br>  stilleshan&#x2F;subweb</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Ubuntu 静态IP配置</title>
+      <link href="/2023/01/06/linux/ubuntu/%E9%9D%99%E6%80%81IP%E9%85%8D%E7%BD%AE/"/>
+      <url>/2023/01/06/linux/ubuntu/%E9%9D%99%E6%80%81IP%E9%85%8D%E7%BD%AE/</url>
+      
+        <content type="html"><![CDATA[<h1 id="静态IP配置"><a href="#静态IP配置" class="headerlink" title="静态IP配置"></a>静态IP配置</h1><h3 id="适用版本-Ubuntu-22-04-1-LTS"><a href="#适用版本-Ubuntu-22-04-1-LTS" class="headerlink" title="适用版本 Ubuntu 22.04.1 LTS"></a>适用版本 Ubuntu 22.04.1 LTS</h3><p>vim &#x2F;etc&#x2F;netplan&#x2F;01-network-manager-all.yaml</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">This is the network config written by <span class="string">&#x27;subiquity&#x27;</span></span></span><br><span class="line">network:</span><br><span class="line">  ethernets:</span><br><span class="line">    ens33:  #网口</span><br><span class="line">      dhcp4: no   #dhcp 开关</span><br><span class="line">      addresses: [192.168.100.156/24] #地址</span><br><span class="line">      optional: true</span><br><span class="line">      routes:</span><br><span class="line">        - to: default</span><br><span class="line">          via: 192.168.100.1 #网关</span><br><span class="line">      nameservers:</span><br><span class="line">        addresses: [114.114.114.114,8.8.8.8] #DNS</span><br><span class="line">  version: 2</span><br><span class="line"></span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo netplan apply</span><br><span class="line"></span><br></pre></td></tr></table></figure><h2 id="多网卡配置"><a href="#多网卡配置" class="headerlink" title="多网卡配置"></a>多网卡配置</h2><p>进行启用配置</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>apt 切换为阿里源</title>
+      <link href="/2023/01/06/linux/ubuntu/apt%E9%98%BF%E9%87%8C%E6%BA%90/"/>
+      <url>/2023/01/06/linux/ubuntu/apt%E9%98%BF%E9%87%8C%E6%BA%90/</url>
+      
+        <content type="html"><![CDATA[<h1 id="apt阿里源"><a href="#apt阿里源" class="headerlink" title="apt阿里源"></a>apt阿里源</h1><h3 id="适用版本-Ubuntu-22-04-1-LTS"><a href="#适用版本-Ubuntu-22-04-1-LTS" class="headerlink" title="适用版本 Ubuntu 22.04.1 LTS"></a>适用版本 Ubuntu 22.04.1 LTS</h3><p>&#x2F;etc&#x2F;apt&#x2F;sources.list </p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>docker搭建MosDNS</title>
+      <link href="/2023/01/06/docker/docker%E6%90%AD%E5%BB%BAMosDNS/"/>
+      <url>/2023/01/06/docker/docker%E6%90%AD%E5%BB%BAMosDNS/</url>
+      
+        <content type="html"><![CDATA[<h1 id="docker搭建MosDNS"><a href="#docker搭建MosDNS" class="headerlink" title="docker搭建MosDNS"></a>docker搭建MosDNS</h1><h3 id="准备MosDNS需要的配置文件"><a href="#准备MosDNS需要的配置文件" class="headerlink" title="准备MosDNS需要的配置文件"></a>准备MosDNS需要的配置文件</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">wget https://glare.xukecheng.tech/Loyalsoldier/geoip/cn.dat -O \</span><br><span class="line">/Users/carey.z/etc/mosdns/cn.dat &amp;&amp; \</span><br><span class="line">wget https://glare.xukecheng.tech/Loyalsoldier/v2ray-rules-dat/geosite.dat -O \</span><br><span class="line">/Users/carey.z/etc/mosdns/geosite.dat &amp;&amp; \</span><br><span class="line">wget https://glare.xukecheng.tech/Loyalsoldier/v2ray-rules-dat/geoip.dat -O \</span><br><span class="line">/Users/carey.z/etc/mosdns/geoip.dat &amp;&amp; \</span><br><span class="line">touch /Users/carey.z/etc/mosdns/ecs_cn_domain.txt &amp;&amp; \</span><br><span class="line">touch /Users/carey.z/etc/mosdns/ecs_tw_domain.txt</span><br></pre></td></tr></table></figure><p><strong>安装命令</strong></p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name mosdns -p 5454:53/udp\</span><br><span class="line">-p 5454:53/tcp -v /Users/carey.z/etc/mosdns:/etc/mosdns\</span><br><span class="line"> irinesistiana/mosdns:latest</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>docker 运行 openwrt.md</title>
+      <link href="/2023/01/06/docker/docker%20%E8%BF%90%E8%A1%8C%20openwrt/"/>
+      <url>/2023/01/06/docker/docker%20%E8%BF%90%E8%A1%8C%20openwrt/</url>
+      
+        <content type="html"><![CDATA[<h1 id="docker-运行-openwrt-md"><a href="#docker-运行-openwrt-md" class="headerlink" title="docker 运行 openwrt.md"></a>docker 运行 openwrt.md</h1><p>docker run -d –name openwrtx86_64 –net openwrt –privileged –ip 10.0.0.8 sulinggg&#x2F;openwrt:x86_64 &#x2F;sbin&#x2F;init</p><p>config interface ‘lan’<br>        option type ‘bridge’<br>        option ifname ‘eth0’<br>        option proto ‘static’<br>        option ipaddr ‘10.0.0.8’<br>        option netmask ‘255.255.255.0’<br>        option gateway ‘10.0.0.10’<br>        option broadcast ‘10.0.0.255’<br>        option dns ‘114.114.114.114’<br>  },</p><p>  Kai19930922**..</p><h1 id="macvlan"><a href="#macvlan" class="headerlink" title="macvlan"></a>macvlan</h1><p> docker network create -d macvlan –subnet&#x3D;10.0.0.0&#x2F;24 –gateway&#x3D;10.0.0.10 -o parent&#x3D;enp3s0 openwrt</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>openwrt 旁路由设置</title>
+      <link href="/2023/01/06/docker/docker%20openwrt%E9%85%8D%E7%BD%AE/"/>
+      <url>/2023/01/06/docker/docker%20openwrt%E9%85%8D%E7%BD%AE/</url>
+      
+        <content type="html"><![CDATA[<p>网上的教程太多，五花八门，修改的地方各不相同，有的根本就不能成功。我经过多次测试，并且本着最小程度修改系统的原则，终于解决了这个问题：<br>1.LAN口取消桥接；<br>2.防火墙添加”iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE”，重启防火墙，立马就能访问了。<br>以上两项步骤缺一不可。</p><p>置顶回复 来自 #garminc<br>2022-8-27 06:42<br>这个问题我记得已经有大神解释过了，假设你的ip是a，旁路由的ip是b，防火墙不加那一行的话，你通过旁路由发出的数据包源头都是a，主路由可以把外网对你的响应数据直接发给你。但是有些主路由会做校验，他发现实际上你的数据包是b发出来的，怀疑你被b劫持了，就会丢掉这个请求。此时防火墙只能加那一行，旁路由就是把你的数据包的源都改成b，主路由就没意见了，但是这样一来，你所有的数据都需要通过旁路由，没有不加那么快</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>hexo 常用命令</title>
+      <link href="/2023/01/06/hexo/hexo%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
+      <url>/2023/01/06/hexo/hexo%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
+      
+        <content type="html"><![CDATA[<h1 id="hexo-常用命令"><a href="#hexo-常用命令" class="headerlink" title="hexo 常用命令"></a>hexo 常用命令</h1><h2 id="初始化博客"><a href="#初始化博客" class="headerlink" title="初始化博客"></a>初始化博客</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo init blog</span><br></pre></td></tr></table></figure><h2 id="清理-public-目录"><a href="#清理-public-目录" class="headerlink" title="清理 public 目录"></a>清理 public 目录</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo clean</span><br></pre></td></tr></table></figure><h2 id="生成博客的静态文件，通常输出到-public-目录。"><a href="#生成博客的静态文件，通常输出到-public-目录。" class="headerlink" title="生成博客的静态文件，通常输出到 public 目录。"></a>生成博客的静态文件，通常输出到 public 目录。</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo generate</span><br></pre></td></tr></table></figure><h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo deploy</span><br></pre></td></tr></table></figure><h2 id="启动本地服务器，通常在-http-localhost-4000-上访问。"><a href="#启动本地服务器，通常在-http-localhost-4000-上访问。" class="headerlink" title="启动本地服务器，通常在 http://localhost:4000 上访问。"></a>启动本地服务器，通常在 <a href="http://localhost:4000/">http://localhost:4000</a> 上访问。</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> hexo </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>MAC idea调整占用内存</title>
+      <link href="/2023/01/06/IDEA/MAC%20idea%E8%B0%83%E6%95%B4%E5%8D%A0%E7%94%A8%E5%86%85%E5%AD%98/"/>
+      <url>/2023/01/06/IDEA/MAC%20idea%E8%B0%83%E6%95%B4%E5%8D%A0%E7%94%A8%E5%86%85%E5%AD%98/</url>
+      
+        <content type="html"><![CDATA[<h1 id="MAC-idea调整占用内存"><a href="#MAC-idea调整占用内存" class="headerlink" title="MAC idea调整占用内存"></a>MAC idea调整占用内存</h1><h6 id="修改IntelliJ-IDEA的内存配置"><a href="#修改IntelliJ-IDEA的内存配置" class="headerlink" title="修改IntelliJ IDEA的内存配置"></a>修改IntelliJ IDEA的内存配置</h6><blockquote><p>找到IntelliJ IDEA在Mac上的内存配置文件，修改参数以后重启生效。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /Applications/IntelliJ\ IDEA.app/Contents/bin/idea.vmoptions</span><br></pre></td></tr></table></figure></blockquote><p> 下面的是原始配置，自己视具体情况进行修改。</p><blockquote><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-Xms128m</span><br><span class="line"></span><br><span class="line">-Xmx750m</span><br><span class="line"></span><br><span class="line">-XX:MaxPermSize=<span class="number">350</span><span class="keyword">m</span></span><br><span class="line"></span><br><span class="line">-XX:ReservedCodeCacheSize=<span class="number">240</span><span class="keyword">m</span></span><br><span class="line"></span><br><span class="line">-XX:+UseCompressedOops</span><br></pre></td></tr></table></figure></blockquote><blockquote><p>在新版本的PhpStorm和IntelliJ IDEA，可在Help -&gt; Edit Custom VM Options中设置JVM参数</p></blockquote>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+  
+  
+</search>
